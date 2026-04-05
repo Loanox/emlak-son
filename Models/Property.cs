@@ -1,4 +1,4 @@
-namespace emlak_son.Entities;
+namespace emlak_son.Models;
 
 public class Property
 {

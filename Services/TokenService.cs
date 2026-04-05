@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using emlak_son.Entities;
+using emlak_son.Models;
 using emlak_son.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;

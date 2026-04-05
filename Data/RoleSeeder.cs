@@ -1,4 +1,4 @@
-using emlak_son.Entities;
+using emlak_son.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace emlak_son.Data;

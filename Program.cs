@@ -1,6 +1,6 @@
 using System.Text;
 using emlak_son.Data;
-using emlak_son.Entities;
+using emlak_son.Models;
 using emlak_son.Repositories;
 using emlak_son.Services;
 using emlak_son.Settings;

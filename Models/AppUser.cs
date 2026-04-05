@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace emlak_son.Entities;
+namespace emlak_son.Models;
 
 public class AppUser : IdentityUser<int>
 {

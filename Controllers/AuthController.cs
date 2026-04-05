@@ -1,5 +1,5 @@
 using emlak_son.DTOs.Auth;
-using emlak_son.Entities;
+using emlak_son.Models;
 using emlak_son.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

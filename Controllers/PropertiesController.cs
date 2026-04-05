@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using emlak_son.DTOs.Property;
-using emlak_son.Entities;
+using emlak_son.Models;
 using emlak_son.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

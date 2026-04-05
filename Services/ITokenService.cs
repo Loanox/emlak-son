@@ -1,4 +1,4 @@
-using emlak_son.Entities;
+using emlak_son.Models;
 
 namespace emlak_son.Services;
 
