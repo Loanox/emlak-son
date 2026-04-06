@@ -18,4 +18,9 @@ public class DashboardController : Controller
     {
         return View();
     }
+
+    public IActionResult CreateProperty()
+    {
+        return View();
+    }
 }

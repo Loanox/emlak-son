@@ -55,12 +55,9 @@
 **Goal:** Build the control center for site administrators.
 - [x] **Admin Layout:** Create a separate, secure layout/dashboard for users with the "Admin" role.
 - [x] **Category Management UI:** CRUD operations for categories via AJAX.
-- [ ] **User Management UI:** View registered users and manage their roles via API (`ChangeRole`).
-- [ ] **Global Property Management:** Ability to delete or approve any property on the site.
+- [x] **User Management UI:** View registered users and manage their roles via API (`ChangeRole`).
+- [x] **Global Property Management:** Ability to delete or approve any property on the site.
 
 ## ?? Phase 15: Final Submission & Polish
 **Goal:** Prepare the project for final grading.
 - [ ] Test the entire flow (Register -> Login -> Create Listing -> Search Listing).
-- [ ] **GitHub Update:** Push all API and MVC code to the GitHub repository.
-- [ ] **Demonstration Video:** Record a <5-minute video presenting the code structure and frontend UI functionality.
-- [ ] Upload video to YouTube and prepare submission links.

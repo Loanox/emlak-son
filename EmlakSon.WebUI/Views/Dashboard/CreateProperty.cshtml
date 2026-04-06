@@ -1,0 +1,148 @@
+@{
+    ViewData["Title"] = "Create New Listing";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-4">Create New Property Listing</h2>
+        <div id="create-alert" class="alert d-none"></div>
+
+        <form id="create-property-form" class="bg-light p-4 rounded shadow-sm">
+            <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="prop-title" class="form-control" required maxlength="200" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Price ($)</label>
+                    <input type="number" id="prop-price" class="form-control" required min="1" step="0.01" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea id="prop-desc" class="form-control" rows="4" required></textarea>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Square Meters</label>
+                    <input type="number" id="prop-sqm" class="form-control" required min="1" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Room Count</label>
+                    <input type="number" id="prop-rooms" class="form-control" required min="1" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Category</label>
+                    <select id="prop-category" class="form-select" required>
+                        <option value="">Select Category...</option>
+                        <!-- Loaded via AJAX -->
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">City</label>
+                    <input type="text" id="prop-city" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">District</label>
+                    <input type="text" id="prop-district" class="form-control" required />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Full Address</label>
+                <input type="text" id="prop-address" class="form-control" required />
+            </div>
+
+            <div class="text-end">
+                <a href="/Dashboard/MyProperties" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" id="btn-submit">Submit Listing</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var token = localStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = '/Auth/Login';
+                return;
+            }
+
+            // Load Categories
+            $.ajax({
+                url: 'https://localhost:7107/api/categories',
+                type: 'GET',
+                success: function(data) {
+                    var select = $('#prop-category');
+                    data.forEach(function(cat) {
+                        if (cat.status) { // Only active categories
+                            select.append(`<option value="${cat.id}">${cat.categoryName}</option>`);
+                        }
+                    });
+                },
+                error: function() {
+                    alert('Could not load categories.');
+                }
+            });
+
+            // Form Submit
+            $('#create-property-form').on('submit', function(e) {
+                e.preventDefault();
+                $('#btn-submit').prop('disabled', true).text('Submitting...');
+                $('#create-alert').addClass('d-none');
+
+                var payload = {
+                    title: $('#prop-title').val(),
+                    description: $('#prop-desc').val(),
+                    price: parseFloat($('#prop-price').val()),
+                    squareMeters: parseInt($('#prop-sqm').val()),
+                    roomCount: parseInt($('#prop-rooms').val()),
+                    city: $('#prop-city').val(),
+                    district: $('#prop-district').val(),
+                    address: $('#prop-address').val(),
+                    categoryId: parseInt($('#prop-category').val())
+                };
+
+                $.ajax({
+                    url: 'https://localhost:7107/api/properties',
+                    type: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(payload),
+                    success: function() {
+                        $('#create-alert')
+                            .removeClass('d-none alert-danger')
+                            .addClass('alert-success')
+                            .text('Listing created successfully! Redirecting...');
+                        
+                        setTimeout(function() {
+                            window.location.href = '/Dashboard/MyProperties';
+                        }, 1500);
+                    },
+                    error: function(xhr) {
+                        $('#btn-submit').prop('disabled', false).text('Submit Listing');
+                        var err = 'Failed to create listing.';
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            err = JSON.stringify(xhr.responseJSON.errors);
+                        } else if (xhr.responseText) {
+                            err = xhr.responseText;
+                        }
+                        $('#create-alert')
+                            .removeClass('d-none alert-success')
+                            .addClass('alert-danger')
+                            .text(err);
+                    }
+                });
+            });
+        });
+    </script>
+}
