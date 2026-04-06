@@ -1,0 +1,181 @@
+@{
+    ViewData["Title"] = "Manage Categories";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Categories</h2>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#categoryModal" id="btn-add">
+        <i class="bi bi-plus-circle"></i> Add Category
+    </button>
+</div>
+
+<table class="table table-hover table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Category Name</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="categories-table">
+        <tr><td colspan="4" class="text-center">Loading categories...</td></tr>
+    </tbody>
+</table>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">Add Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cat-id" value="0">
+                <div class="mb-3">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" id="cat-name" class="form-control" required>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="cat-status" checked>
+                    <label class="form-check-label" for="cat-status">Active</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btn-save">Save Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var apiUrl = 'https://localhost:7107/api/categories';
+        
+        function getHeaders() {
+            return {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        function loadCategories() {
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                success: function(data) {
+                    var tbody = $('#categories-table');
+                    tbody.empty();
+                    if (!data || data.length === 0) {
+                        tbody.append('<tr><td colspan="4" class="text-center">No categories found.</td></tr>');
+                        return;
+                    }
+                    
+                    data.forEach(function(cat) {
+                        var statusBadge = cat.status 
+                            ? '<span class="badge bg-success">Active</span>' 
+                            : '<span class="badge bg-danger">Inactive</span>';
+
+                        var editBtn = `<button class="btn btn-sm btn-outline-primary me-2" onclick="editCategory(${cat.id}, '${cat.categoryName}', ${cat.status})">Edit</button>`;
+                        var delBtn = `<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${cat.id})">Delete</button>`;
+
+                        tbody.append(`
+                            <tr>
+                                <td>${cat.id}</td>
+                                <td>${cat.categoryName}</td>
+                                <td>${statusBadge}</td>
+                                <td>${editBtn}${delBtn}</td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function() {
+                    $('#categories-table').html('<tr><td colspan="4" class="text-danger text-center">Failed to load.</td></tr>');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            // Give layout script time to check auth before loading
+            setTimeout(loadCategories, 200);
+
+            $('#btn-add').click(function() {
+                $('#modal-title').text('Add Category');
+                $('#cat-id').val(0);
+                $('#cat-name').val('');
+                $('#cat-status').prop('checked', true);
+            });
+
+            $('#btn-save').click(function() {
+                var id = parseInt($('#cat-id').val());
+                var name = $('#cat-name').val().trim();
+                var status = $('#cat-status').is(':checked');
+
+                if (!name) {
+                    alert('Name is required');
+                    return;
+                }
+
+                var payload = JSON.stringify({ categoryName: name, status: status });
+                
+                if (id === 0) { // Create
+                    $.ajax({
+                        url: apiUrl,
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: payload,
+                        success: function() {
+                            $('#categoryModal').modal('hide');
+                            loadCategories();
+                        },
+                        error: function(err) {
+                            alert('Failed to add category. Are you an admin?');
+                        }
+                    });
+                } else { // Update
+                    $.ajax({
+                        url: `${apiUrl}/${id}`,
+                        type: 'PUT',
+                        headers: getHeaders(),
+                        data: payload,
+                        success: function() {
+                            $('#categoryModal').modal('hide');
+                            loadCategories();
+                        },
+                        error: function(err) {
+                            alert('Failed to update category.');
+                        }
+                    });
+                }
+            });
+        });
+
+        function editCategory(id, name, status) {
+            $('#modal-title').text('Edit Category');
+            $('#cat-id').val(id);
+            $('#cat-name').val(name);
+            $('#cat-status').prop('checked', status);
+            var myModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            myModal.show();
+        }
+
+        function deleteCategory(id) {
+            if (confirm('Are you sure you want to delete this category?')) {
+                $.ajax({
+                    url: `${apiUrl}/${id}`,
+                    type: 'DELETE',
+                    headers: getHeaders(),
+                    success: function() {
+                        loadCategories();
+                    },
+                    error: function() {
+                        alert('Failed to delete category.');
+                    }
+                });
+            }
+        }
+    </script>
+}

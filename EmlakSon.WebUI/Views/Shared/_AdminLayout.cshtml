@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/Admin">EmlakSon Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="adminNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/Admin/Categories">Categories</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Properties</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/">Back to Site</a></li>
+                    <li class="nav-item"><a class="nav-link text-danger" href="#" id="admin-logout">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div id="admin-auth-error" class="alert alert-danger d-none">
+            You do not have permission to view this page. Redirecting...
+        </div>
+        <div id="admin-content" class="d-none">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var token = localStorage.getItem('auth_token');
+            var rolesStr = localStorage.getItem('auth_roles');
+            var isAdmin = false;
+
+            if (rolesStr) {
+                try {
+                    var roles = JSON.parse(rolesStr);
+                    if (roles.includes('Admin')) {
+                        isAdmin = true;
+                    }
+                } catch(e) {}
+            }
+
+            if (!token || !isAdmin) {
+                $('#admin-auth-error').removeClass('d-none');
+                setTimeout(function() {
+                    window.location.href = '/';
+                }, 2000);
+            } else {
+                $('#admin-content').removeClass('d-none');
+            }
+
+            $('#admin-logout').click(function(e) {
+                e.preventDefault();
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('auth_email');
+                localStorage.removeItem('auth_roles');
+                window.location.href = '/';
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

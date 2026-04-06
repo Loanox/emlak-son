@@ -53,8 +53,8 @@
 
 ## ??? Phase 14: Frontend - Admin Panel (Jquery AJAX)
 **Goal:** Build the control center for site administrators.
-- [ ] **Admin Layout:** Create a separate, secure layout/dashboard for users with the "Admin" role.
-- [ ] **Category Management UI:** CRUD operations for categories via AJAX.
+- [x] **Admin Layout:** Create a separate, secure layout/dashboard for users with the "Admin" role.
+- [x] **Category Management UI:** CRUD operations for categories via AJAX.
 - [ ] **User Management UI:** View registered users and manage their roles via API (`ChangeRole`).
 - [ ] **Global Property Management:** Ability to delete or approve any property on the site.
 
