@@ -11,6 +11,9 @@ public class ResultPropertyDto
     public string City { get; set; } = string.Empty;
     public string District { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
+    public string Status { get; set; } = "Active";
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
     public DateTime CreatedDate { get; set; }
     public int CategoryId { get; set; }
     public int AppUserId { get; set; }

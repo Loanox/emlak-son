@@ -2,24 +2,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EmlakSon.WebUI.Controllers;
 
-public class AdminController : Controller
+public class DashboardController : Controller
 {
     public IActionResult Index()
     {
         return View();
     }
 
-    public IActionResult Categories()
+    public IActionResult MyProperties()
     {
         return View();
     }
 
-    public IActionResult Users()
-    {
-        return View();
-    }
-
-    public IActionResult Properties()
+    public IActionResult Favorites()
     {
         return View();
     }

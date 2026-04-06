@@ -142,6 +142,24 @@ public class PropertiesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("{id:int}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
+    {
+        var property = await _propertyRepository.GetByIdAsync(id);
+        if (property is null)
+        {
+            return NotFound();
+        }
+
+        property.Status = newStatus;
+
+        _propertyRepository.Update(property);
+        await _propertyRepository.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     [Authorize(Roles = "User,Admin")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
@@ -187,6 +205,9 @@ public class PropertiesController : ControllerBase
             City = property.City,
             District = property.District,
             Address = property.Address,
+            Status = property.Status,
+            Latitude = property.Latitude,
+            Longitude = property.Longitude,
             CreatedDate = property.CreatedDate,
             CategoryId = property.CategoryId,
             AppUserId = property.AppUserId

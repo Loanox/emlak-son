@@ -1,0 +1,129 @@
+@{
+    ViewData["Title"] = "Manage Users";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Users</h2>
+</div>
+
+<table class="table table-hover table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="users-table">
+        <tr><td colspan="4" class="text-center">Loading users...</td></tr>
+    </tbody>
+</table>
+
+<!-- Change Role Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change User Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="user-email" value="">
+                <div class="mb-3">
+                    <label class="form-label">New Role</label>
+                    <select id="user-role" class="form-select">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btn-save-role">Save Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getHeaders() {
+            return {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        function loadUsers() {
+            $.ajax({
+                url: 'https://localhost:7107/api/auth/users',
+                type: 'GET',
+                headers: getHeaders(),
+                success: function(data) {
+                    var tbody = $('#users-table');
+                    tbody.empty();
+                    if (!data || data.length === 0) {
+                        tbody.append('<tr><td colspan="4" class="text-center">No users found.</td></tr>');
+                        return;
+                    }
+                    
+                    data.forEach(function(user) {
+                        var roleStr = (user.roles && user.roles.length > 0) ? user.roles.join(', ') : 'None';
+                        var badgeClass = roleStr.includes('Admin') ? 'bg-danger' : 'bg-primary';
+                        
+                        var roleBadge = `<span class="badge ${badgeClass}">${roleStr}</span>`;
+
+                        var editBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openRoleModal('${user.email}', '${roleStr}')">Change Role</button>`;
+
+                        tbody.append(`
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.email}</td>
+                                <td>${roleBadge}</td>
+                                <td>${editBtn}</td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function() {
+                    $('#users-table').html('<tr><td colspan="4" class="text-danger text-center">Failed to load users.</td></tr>');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setTimeout(loadUsers, 200);
+
+            $('#btn-save-role').click(function() {
+                var email = $('#user-email').val();
+                var newRole = $('#user-role').val();
+
+                $.ajax({
+                    url: `https://localhost:7107/api/auth/change-role?email=${encodeURIComponent(email)}&newRole=${encodeURIComponent(newRole)}`,
+                    type: 'PUT',
+                    headers: getHeaders(),
+                    success: function() {
+                        $('#roleModal').modal('hide');
+                        loadUsers();
+                    },
+                    error: function(err) {
+                        alert('Failed to change role. Note: Some initial admin structures might block role removal.');
+                    }
+                });
+            });
+        });
+
+        function openRoleModal(email, currentRoles) {
+            $('#user-email').val(email);
+            if (currentRoles.includes('Admin')) {
+                $('#user-role').val('Admin');
+            } else {
+                $('#user-role').val('User');
+            }
+            var myModal = new bootstrap.Modal(document.getElementById('roleModal'));
+            myModal.show();
+        }
+    </script>
+}

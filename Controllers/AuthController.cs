@@ -114,4 +114,25 @@ public class AuthController : ControllerBase
 
         return Ok(new { Message = $"User role successfully changed to '{newRole}'. They no longer have any other roles." });
     }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("users")]
+    public async Task<IActionResult> GetUsers()
+    {
+        var usersList = _userManager.Users.ToList();
+        var result = new List<object>();
+
+        foreach (var user in usersList)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            result.Add(new
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Roles = roles
+            });
+        }
+
+        return Ok(result);
+    }
 }

@@ -1,0 +1,151 @@
+@{
+    ViewData["Title"] = "Manage Properties";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Global Property Management</h2>
+</div>
+
+<table class="table table-hover table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Price</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="properties-table">
+        <tr><td colspan="6" class="text-center">Loading properties...</td></tr>
+    </tbody>
+</table>
+
+<!-- Status Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Property Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="prop-id" value="0">
+                <div class="mb-3">
+                    <label class="form-label">New Status</label>
+                    <select id="prop-status" class="form-select">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Sold">Sold</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btn-save-status">Save Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var apiUrl = 'https://localhost:7107/api/properties';
+        
+        function getHeaders() {
+            return {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        function loadProps() {
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                success: function(data) {
+                    var tbody = $('#properties-table');
+                    tbody.empty();
+                    if (!data || data.length === 0) {
+                        tbody.append('<tr><td colspan="6" class="text-center">No properties found.</td></tr>');
+                        return;
+                    }
+                    
+                    data.forEach(function(prop) {
+                        var status = prop.status || 'Active';
+                        var badgeClass = 'bg-success';
+                        if (status === 'Inactive') badgeClass = 'bg-secondary';
+                        if (status === 'Sold') badgeClass = 'bg-primary';
+
+                        var statusBadge = `<span class="badge ${badgeClass}">${status}</span>`;
+
+                        var statusBtn = `<button class="btn btn-sm btn-outline-primary me-2" onclick="openStatusModal(${prop.id}, '${status}')">Change Status</button>`;
+                        var delBtn = `<button class="btn btn-sm btn-outline-danger" onclick="deleteProp(${prop.id})">Delete</button>`;
+
+                        tbody.append(`
+                            <tr>
+                                <td>${prop.id}</td>
+                                <td><a href="/Properties/Details/${prop.id}">${prop.title}</a></td>
+                                <td>$${prop.price.toLocaleString()}</td>
+                                <td>${prop.city}, ${prop.district}</td>
+                                <td>${statusBadge}</td>
+                                <td>${statusBtn}${delBtn}</td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function() {
+                    $('#properties-table').html('<tr><td colspan="6" class="text-danger text-center">Failed to load properties.</td></tr>');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setTimeout(loadProps, 200);
+
+            $('#btn-save-status').click(function() {
+                var id = parseInt($('#prop-id').val());
+                var newStatus = $('#prop-status').val();
+
+                $.ajax({
+                    url: `${apiUrl}/${id}/status`,
+                    type: 'PATCH',
+                    headers: getHeaders(),
+                    data: JSON.stringify(newStatus),
+                    success: function() {
+                        $('#statusModal').modal('hide');
+                        loadProps();
+                    },
+                    error: function(err) {
+                        alert('Failed to update status.');
+                    }
+                });
+            });
+        });
+
+        function openStatusModal(id, currentStatus) {
+            $('#prop-id').val(id);
+            $('#prop-status').val(currentStatus);
+            var myModal = new bootstrap.Modal(document.getElementById('statusModal'));
+            myModal.show();
+        }
+
+        function deleteProp(id) {
+            if (confirm('Are you sure you want to permanently delete this property?')) {
+                $.ajax({
+                    url: `${apiUrl}/${id}`,
+                    type: 'DELETE',
+                    headers: getHeaders(),
+                    success: function() {
+                        loadProps();
+                    },
+                    error: function() {
+                        alert('Failed to delete property.');
+                    }
+                });
+            }
+        }
+    </script>
+}

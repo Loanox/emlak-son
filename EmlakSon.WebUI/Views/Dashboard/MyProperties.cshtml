@@ -1,0 +1,87 @@
+@{
+    ViewData["Title"] = "My Properties";
+}
+
+<div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center">
+        <h2>My Properties</h2>
+        <!-- Future: Add Property Page Link -->
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4" id="my-properties-list">
+    <div class="col text-center w-100" id="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var token = localStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = '/Auth/Login';
+                return;
+            }
+
+            $.ajax({
+                url: 'https://localhost:7107/api/properties/mine',
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(data) {
+                    $('#loading-spinner').remove();
+                    var list = $('#my-properties-list');
+
+                    if (!data || data.length === 0) {
+                        list.append('<div class="col w-100"><div class="alert alert-info">You have not listed any properties yet.</div></div>');
+                        return;
+                    }
+
+                    data.forEach(function(p) {
+                        var card = `
+                            <div class="col">
+                                <div class="card h-100 shadow-sm">
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold text-truncate">${p.title}</h5>
+                                        <span class="badge ${p.status === 'Active' ? 'bg-success' : 'bg-secondary'} mb-2">${p.status || 'Active'}</span>
+                                        <h6 class="text-primary mb-3">$${p.price.toLocaleString()}</h6>
+                                        <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> ${p.city}, ${p.district}</p>
+                                        <a href="/Properties/Details/${p.id}" class="btn btn-sm btn-outline-primary w-100 mb-2">View</a>
+                                        <button class="btn btn-sm btn-danger w-100" onclick="deleteProp(${p.id})">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        list.append(card);
+                    });
+                },
+                error: function() {
+                    $('#loading-spinner').remove();
+                    $('#my-properties-list').html('<div class="col w-100"><div class="alert alert-danger">Error loading your properties.</div></div>');
+                }
+            });
+        });
+
+        function deleteProp(id) {
+            if (confirm("Are you sure you want to permanently delete your listing?")) {
+                $.ajax({
+                    url: 'https://localhost:7107/api/properties/' + id,
+                    type: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                    },
+                    success: function() {
+                        location.reload();
+                    },
+                    error: function() {
+                        alert('Could not delete property.');
+                    }
+                });
+            }
+        }
+    </script>
+}

@@ -49,7 +49,7 @@
 - [x] **Auth Pages:** Create Login and Register views using Jquery AJAX to call API. Store JWT in LocalStorage/Cookies.
 - [x] **Home Page:** Display latest/featured properties dynamically.
 - [x] **Property Listing & Details:** Pages to search, filter, and view full details (including images and map) of a property.
-- [ ] **User Dashboard:** A protected area for standard users to manage their listings (`GetMine`) and favorites.
+- [x] **User Dashboard:** A protected area for standard users to manage their listings (`GetMine`) and favorites.
 
 ## ??? Phase 14: Frontend - Admin Panel (Jquery AJAX)
 **Goal:** Build the control center for site administrators.
