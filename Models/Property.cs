@@ -18,4 +18,8 @@ public class Property
 
     public int AppUserId { get; set; }
     public AppUser? AppUser { get; set; }
+
+    public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<PropertyImage> Images { get; set; } = new List<PropertyImage>();
 }

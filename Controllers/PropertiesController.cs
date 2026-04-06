@@ -25,6 +25,28 @@ public class PropertiesController : ControllerBase
         return Ok(properties.Select(MapToResultDto));
     }
 
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<ResultPropertyDto>>> Search([FromQuery] PropertySearchDto search)
+    {
+        var properties = await _propertyRepository.GetAllAsync();
+        var query = properties.AsQueryable();
+
+        if (search.MinPrice.HasValue) query = query.Where(p => p.Price >= search.MinPrice.Value);
+        if (search.MaxPrice.HasValue) query = query.Where(p => p.Price <= search.MaxPrice.Value);
+        if (!string.IsNullOrWhiteSpace(search.City)) query = query.Where(p => p.City.Equals(search.City, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(search.District)) query = query.Where(p => p.District.Equals(search.District, StringComparison.OrdinalIgnoreCase));
+        if (search.MinRoomCount.HasValue) query = query.Where(p => p.RoomCount >= search.MinRoomCount.Value);
+        if (search.MinSquareMeters.HasValue) query = query.Where(p => p.SquareMeters >= search.MinSquareMeters.Value);
+
+        var totalItems = query.Count();
+        var items = query.Skip((search.PageNumber - 1) * search.PageSize).Take(search.PageSize).ToList();
+
+        var result = items.Select(MapToResultDto);
+        Response.Headers.Append("X-Total-Count", totalItems.ToString());
+        
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ResultPropertyDto>> GetById(int id)
     {

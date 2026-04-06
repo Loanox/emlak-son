@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <h2 class="text-center mb-4">Login</h2>
+            <div id="login-alert" class="alert alert-danger d-none"></div>
+            <form id="login-form">
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="login-email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="login-password" class="form-control" required />
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <div class="mt-3 text-center">
+                <p>Don't have an account? <a asp-controller="Auth" asp-action="Register">Register here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#login-form').on('submit', function(e) {
+                e.preventDefault();
+                $('#login-alert').addClass('d-none');
+
+                var loginData = {
+                    email: $('#login-email').val(),
+                    password: $('#login-password').val()
+                };
+
+                $.ajax({
+                    url: 'https://localhost:7107/api/auth/login', // BaseUrl will ideally be dynamic, hardcoded for now mapping to typical local port
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(loginData),
+                    success: function(response) {
+                        // Store the token in LocalStorage
+                        localStorage.setItem('auth_token', response.token);
+                        localStorage.setItem('auth_email', response.email);
+                        localStorage.setItem('auth_roles', JSON.stringify(response.roles));
+
+                        alert('Login successful!');
+                        window.location.href = '/';
+                    },
+                    error: function(xhr) {
+                        var errorMsg = 'An error occurred during login.';
+                        if (xhr.responseText) {
+                           errorMsg = xhr.responseText;
+                        }
+                        $('#login-alert').text(errorMsg).removeClass('d-none');
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -12,6 +12,9 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, int>
 
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Property> Properties => Set<Property>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -42,5 +45,44 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, int>
             .WithMany(u => u.Properties)
             .HasForeignKey(p => p.AppUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PropertyImage>()
+            .HasOne(pi => pi.Property)
+            .WithMany(p => p.Images)
+            .HasForeignKey(pi => pi.PropertyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Favorite>()
+            .HasIndex(f => new { f.AppUserId, f.PropertyId })
+            .IsUnique();
+
+        builder.Entity<Favorite>()
+            .HasOne(f => f.AppUser)
+            .WithMany(u => u.Favorites)
+            .HasForeignKey(f => f.AppUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Favorite>()
+            .HasOne(f => f.Property)
+            .WithMany(p => p.Favorites)
+            .HasForeignKey(f => f.PropertyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Comment>()
+            .Property(c => c.Content)
+            .HasMaxLength(1000)
+            .IsRequired();
+
+        builder.Entity<Comment>()
+            .HasOne(c => c.AppUser)
+            .WithMany(u => u.Comments)
+            .HasForeignKey(c => c.AppUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Comment>()
+            .HasOne(c => c.Property)
+            .WithMany(p => p.Comments)
+            .HasForeignKey(c => c.PropertyId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

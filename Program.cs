@@ -68,6 +68,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles(); // Added for image uploads
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

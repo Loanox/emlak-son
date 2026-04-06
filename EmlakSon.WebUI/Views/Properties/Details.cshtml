@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "Property Details";
+}
+
+<div class="container mt-4" id="property-details-container">
+    <!-- Loaded via AJAX -->
+    <div class="text-center w-100" id="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var propertyId = '@ViewBag.PropertyId';
+
+            if (!propertyId) {
+                $('#property-details-container').html('<div class="alert alert-danger">Invalid Property ID</div>');
+                return;
+            }
+
+            $.ajax({
+                url: 'https://localhost:7107/api/properties/' + propertyId,
+                type: 'GET',
+                success: function(property) {
+                    $('#loading-spinner').remove();
+
+                    if (!property) {
+                        $('#property-details-container').html('<div class="alert alert-warning">Property not found.</div>');
+                        return;
+                    }
+
+                    var lat = property.latitude || 41.0082; // Default to Istanbul
+                    var lng = property.longitude || 28.9784;
+
+                    var detailHtml = `
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h1 class="fw-bold mb-2">${property.title}</h1>
+                                <p class="text-muted"><i class="bi bi-geo-alt-fill"></i> ${property.address}, ${property.district}, ${property.city}</p>
+                                
+                                <div class="bg-light p-4 rounded mb-4 mt-4">
+                                    <h4 class="fw-bold text-primary mb-0">$${property.price.toLocaleString()}</h4>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h4>Description</h4>
+                                    <p>${property.description}</p>
+                                </div>
+                                
+                                <div class="row mb-4">
+                                    <div class="col-sm-4"><strong>Rooms:</strong> ${property.roomCount}</div>
+                                    <div class="col-sm-4"><strong>Area:</strong> ${property.squareMeters} m²</div>
+                                    <div class="col-sm-4"><strong>Status:</strong> <span class="badge ${property.status === 'Active' ? 'bg-success' : 'bg-secondary'}">${property.status || 'Active'}</span></div>
+                                </div>
+
+                                <!-- Add to Favorites button for logged users -->
+                                <button id="btn-favorite" class="btn btn-outline-danger mt-2 mb-4 d-none">
+                                    <i class="bi bi-heart"></i> Add to Favorites
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card mb-4 shadow-sm border-0">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Location</h5>
+                                        <!-- Map block placeholder -->
+                                        <div style="height:300px; background:#e9ecef; border-radius:8px;" class="d-flex align-items-center justify-content-center text-muted">
+                                            <i class="bi bi-map w-100 h-100 text-center h1 mt-5 pt-5"></i>
+                                            <p class="mt-2" style="position:absolute">Map Lat/Long:<br>${lat}, ${lng}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    $('#property-details-container').html(detailHtml);
+
+                    // Check user auth to show "Add to favorite"
+                    var token = localStorage.getItem('auth_token');
+                    if (token) {
+                        $('#btn-favorite').removeClass('d-none');
+                        $('#btn-favorite').click(function() {
+                            // Perform ajax post to /api/favorites
+                            $.ajax({
+                                url: 'https://localhost:7107/api/favorites',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({ propertyId: property.id }),
+                                headers: {
+                                    'Authorization': 'Bearer ' + token
+                                },
+                                success: function(favResponse) {
+                                    alert('Added to favorites!');
+                                    // Change icon to filled, etc. This is basic success.
+                                },
+                                error: function(err) {
+                                    console.log(err);
+                                    if (err.status === 400 || err.status === 409) {
+                                        alert('Already in favorites!');
+                                    } else {
+                                        alert('Could not add to favorites. Please login again.');
+                                    }
+                                }
+                            })
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    $('#loading-spinner').remove();
+                    $('#property-details-container').html('<div class="alert alert-danger">Error loading property details.</div>');
+                }
+            });
+        });
+    </script>
+}

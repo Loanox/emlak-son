@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>emlak_son</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);EmlakSon.WebUI\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

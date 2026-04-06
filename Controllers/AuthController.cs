@@ -12,11 +12,13 @@ namespace emlak_son.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly UserManager<AppUser> _userManager;
+    private readonly RoleManager<AppRole> _roleManager;
     private readonly ITokenService _tokenService;
 
-    public AuthController(UserManager<AppUser> userManager, ITokenService tokenService)
+    public AuthController(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, ITokenService tokenService)
     {
         _userManager = userManager;
+        _roleManager = roleManager;
         _tokenService = tokenService;
     }
 
@@ -78,5 +80,38 @@ public class AuthController : ControllerBase
             Email = user.Email ?? string.Empty,
             Roles = roles
         });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("change-role")]
+    public async Task<IActionResult> ChangeRole(string email, string newRole)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            return NotFound("User not found.");
+        }
+
+        var roleExists = await _roleManager.RoleExistsAsync(newRole);
+        if (!roleExists)
+        {
+            return BadRequest("Role does not exist.");
+        }
+
+        var currentRoles = await _userManager.GetRolesAsync(user);
+        
+        var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+        if (!removeResult.Succeeded)
+        {
+            return BadRequest("Failed to remove old roles.");
+        }
+
+        var addResult = await _userManager.AddToRoleAsync(user, newRole);
+        if (!addResult.Succeeded)
+        {
+            return BadRequest("Failed to assign new role.");
+        }
+
+        return Ok(new { Message = $"User role successfully changed to '{newRole}'. They no longer have any other roles." });
     }
 }

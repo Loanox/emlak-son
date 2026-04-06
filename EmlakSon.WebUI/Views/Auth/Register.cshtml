@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <h2 class="text-center mb-4">Register</h2>
+            <div id="register-alert" class="alert alert-danger d-none"></div>
+            <form id="register-form">
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="register-email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="register-password" class="form-control" required minlength="6" />
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Register</button>
+            </form>
+            <div class="mt-3 text-center">
+                <p>Already have an account? <a asp-controller="Auth" asp-action="Login">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#register-form').on('submit', function(e) {
+                e.preventDefault();
+                $('#register-alert').addClass('d-none');
+
+                var registerData = {
+                    email: $('#register-email').val(),
+                    password: $('#register-password').val()
+                };
+
+                $.ajax({
+                    url: 'https://localhost:7107/api/auth/register',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(registerData),
+                    success: function(response) {
+                        // Store the token in LocalStorage
+                        localStorage.setItem('auth_token', response.token);
+                        localStorage.setItem('auth_email', response.email);
+                        localStorage.setItem('auth_roles', JSON.stringify(response.roles));
+
+                        alert('Registration successful!');
+                        window.location.href = '/';
+                    },
+                    error: function(xhr) {
+                        var errorMsg = 'An error occurred during registration. Check if email is already in use.';
+                        if (xhr.status === 400 && xhr.responseJSON) {
+                            errorMsg = JSON.stringify(xhr.responseJSON);
+                        } else if (xhr.responseText) {
+                            errorMsg = xhr.responseText;
+                        }
+                        $('#register-alert').text(errorMsg).removeClass('d-none');
+                    }
+                });
+            });
+        });
+    </script>
+}

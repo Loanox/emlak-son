@@ -1,0 +1,161 @@
+@{
+    ViewData["Title"] = "Property Listings";
+}
+
+<h2 class="mb-4">Search Properties</h2>
+<form id="search-form" class="row g-3 mb-5 p-4 border rounded bg-light">
+    <div class="col-md-3">
+        <label for="city" class="form-label">City</label>
+        <input type="text" class="form-control form-control-sm" id="city" placeholder="E.g. Istanbul">
+    </div>
+    <div class="col-md-3">
+        <label for="district" class="form-label">District</label>
+        <input type="text" class="form-control form-control-sm" id="district" placeholder="E.g. Kadikoy">
+    </div>
+    <div class="col-md-2">
+        <label for="roomCount" class="form-label">Room Count</label>
+        <input type="number" class="form-control form-control-sm" id="roomCount" min="1">
+    </div>
+    <div class="col-md-2">
+        <label for="minPrice" class="form-label">Min Price</label>
+        <input type="number" class="form-control form-control-sm" id="minPrice" min="0">
+    </div>
+    <div class="col-md-2">
+        <label for="maxPrice" class="form-label">Max Price</label>
+        <input type="number" class="form-control form-control-sm" id="maxPrice" min="0">
+    </div>
+    <div class="col-12 text-end mt-3">
+        <button type="submit" class="btn btn-primary px-4">Search</button>
+        <button type="button" id="reset-search" class="btn btn-secondary px-4 ms-2">Reset</button>
+    </div>
+</form>
+
+<div class="row mb-3 align-items-center">
+    <div class="col">
+        <h4 id="results-heading">Showing All Properties</h4>
+    </div>
+</div>
+
+<div id="property-list" class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    <!-- Properties loaded via AJAX here -->
+    <div class="col text-center w-100" id="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center" id="pagination-control">
+        <!-- Pagination loaded via AJAX here -->
+    </ul>
+</nav>
+
+@section Scripts {
+    <script>
+        var currentPage = 1;
+        var pageSize = 9;
+
+        $(document).ready(function() {
+            loadProperties();
+
+            $('#search-form').on('submit', function(e) {
+                e.preventDefault();
+                currentPage = 1; // Reset to page 1 on new search
+                loadProperties();
+            });
+
+            $('#reset-search').click(function() {
+                $('#search-form')[0].reset();
+                currentPage = 1;
+                loadProperties();
+            });
+        });
+
+        function loadProperties() {
+            $('#property-list').html(`
+                <div class="col text-center w-100">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `);
+
+            var isSearching = $('#city').val() || $('#district').val() || $('#roomCount').val() || $('#minPrice').val() || $('#maxPrice').val();
+            var apiUrl = '';
+            var reqData = { pageNumber: currentPage, pageSize: pageSize };
+
+            if (isSearching) {
+                apiUrl = 'https://localhost:7107/api/properties/search';
+                if ($('#city').val()) reqData.city = $('#city').val();
+                if ($('#district').val()) reqData.district = $('#district').val();
+                if ($('#roomCount').val()) reqData.roomCount = $('#roomCount').val();
+                if ($('#minPrice').val()) reqData.minPrice = $('#minPrice').val();
+                if ($('#maxPrice').val()) reqData.maxPrice = $('#maxPrice').val();
+                $('#results-heading').text('Search Results');
+            } else {
+                apiUrl = 'https://localhost:7107/api/properties';
+                // Original standard getting all (could add pagination mapping on server, but keeping simple fetch for standard)
+                $('#results-heading').text('Showing All Properties');
+            }
+
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                data: reqData,
+                success: function(response) {
+                    $('#property-list').empty();
+                    
+                    var data = isSearching && response.items ? response.items : response; // Handle paged response vs raw array
+                    var totalCount = isSearching && response.totalCount ? response.totalCount : data.length;
+
+                    if (!data || data.length === 0) {
+                        $('#property-list').append('<div class="col w-100"><div class="alert alert-info">No properties found matching your criteria.</div></div>');
+                        $('#pagination-control').empty();
+                        return;
+                    }
+
+                    data.forEach(function(property) {
+                        var cardHtml = `
+                            <div class="col">
+                                <div class="card h-100 shadow-sm border-0 bg-white">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-truncate fw-bold" title="${property.title}">${property.title}</h5>
+                                        <span class="badge ${property.status === 'Active' ? 'bg-success' : 'bg-secondary'} mb-2">${property.status || 'Active'}</span>
+                                        <h6 class="card-subtitle mb-3 text-primary fs-5">$${(property.price || 0).toLocaleString()}</h6>
+                                        <p class="card-text text-muted mb-1 small"><i class="bi bi-geo-alt"></i> ${property.city}, ${property.district}</p>
+                                        <p class="card-text text-muted mb-3 small"><i class="bi bi-house"></i> ${property.roomCount} Rooms • ${property.squareMeters}m²</p>
+                                        <a href="/Properties/Details/${property.id}" class="btn btn-outline-primary btn-sm w-100 mt-auto">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        $('#property-list').append(cardHtml);
+                    });
+
+                    // Build basic pagination controls if searching
+                    $('#pagination-control').empty();
+                    if (isSearching && response.totalPages > 1) {
+                        for (let i = 1; i <= response.totalPages; i++) {
+                            let act = (i === currentPage) ? 'active' : '';
+                            $('#pagination-control').append(`
+                                <li class="page-item ${act}">
+                                    <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                                </li>
+                            `);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    $('#property-list').html('<div class="col w-100"><div class="alert alert-danger">Error fetching properties.</div></div>');
+                    $('#pagination-control').empty();
+                }
+            });
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadProperties();
+        }
+    </script>
+}

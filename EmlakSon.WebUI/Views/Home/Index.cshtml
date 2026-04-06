@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center py-5 bg-light mb-4 rounded shadow-sm">
+    <h1 class="display-4 fw-bold">Find Your Dream Home</h1>
+    <p class="lead text-muted">The best real estate portal for buying and renting properties.</p>
+    <a href="/Properties" class="btn btn-primary btn-lg mt-3">Browse Properties</a>
+</div>
+
+<h2 class="mb-4">Latest Properties</h2>
+<div id="latest-properties" class="row row-cols-1 row-cols-md-3 g-4">
+    <!-- Properties will be loaded here via AJAX -->
+    <div class="col text-center w-100" id="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: 'https://localhost:7107/api/properties',
+                type: 'GET',
+                success: function (data) {
+                    $('#loading-spinner').remove();
+                    var container = $('#latest-properties');
+                    
+                    if (data.length === 0) {
+                        container.append('<div class="col w-100"><p class="text-muted">No properties available yet.</p></div>');
+                        return;
+                    }
+
+                    // Display only the last 6 properties for the home page, sorted by newest
+                    var latest = data.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate)).slice(0, 6);
+
+                    latest.forEach(function (property) {
+                        var cardHtml = `
+                            <div class="col">
+                                <div class="card h-100 shadow-sm">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-truncate" title="${property.title}">${property.title}</h5>
+                                        <h6 class="card-subtitle mb-2 text-primary fw-bold">$${property.price.toLocaleString()}</h6>
+                                        <p class="card-text text-muted small mb-1">
+                                            <i class="bi bi-geo-alt"></i> ${property.district}, ${property.city}
+                                        </p>
+                                        <p class="card-text text-muted small mb-3">
+                                            <i class="bi bi-house"></i> Rooms: ${property.roomCount} | ${property.squareMeters} m²
+                                        </p>
+                                        <a href="/Properties/Details/${property.id}" class="btn btn-outline-primary btn-sm w-100">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        container.append(cardHtml);
+                    });
+                },
+                error: function (xhr) {
+                    $('#loading-spinner').remove();
+                    $('#latest-properties').append('<div class="col w-100"><div class="alert alert-danger">Failed to load properties. Please check the API.</div></div>');
+                }
+            });
+        });
+    </script>
+}
