@@ -241,7 +241,7 @@ namespace emlak_son.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("emlak_son.Models.Comment", b =>
@@ -275,7 +275,7 @@ namespace emlak_son.Migrations
 
                     b.HasIndex("PropertyId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("emlak_son.Models.Favorite", b =>
@@ -302,7 +302,7 @@ namespace emlak_son.Migrations
                     b.HasIndex("AppUserId", "PropertyId")
                         .IsUnique();
 
-                    b.ToTable("Favorites");
+                    b.ToTable("Favorites", (string)null);
                 });
 
             modelBuilder.Entity("emlak_son.Models.Property", b =>
@@ -358,7 +358,7 @@ namespace emlak_son.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Properties");
+                    b.ToTable("Properties", (string)null);
                 });
 
             modelBuilder.Entity("emlak_son.Models.PropertyImage", b =>
@@ -383,7 +383,7 @@ namespace emlak_son.Migrations
 
                     b.HasIndex("PropertyId");
 
-                    b.ToTable("PropertyImages");
+                    b.ToTable("PropertyImages", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
